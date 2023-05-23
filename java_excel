@@ -43,3 +43,76 @@ public class ExcelWriterExample {
         }
     }
 }
+
+######################## Second Code ############################
+
+import java.io.FileOutputStream;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.Statement;
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+
+public class SqlToExcel {
+    public static void main(String[] args) {
+        String jdbcUrl = "jdbc:mysql://localhost:3306/your_database";
+        String username = "your_username";
+        String password = "your_password";
+        String query = "SELECT * FROM your_table";
+
+        try {
+            // Connect to the database
+            Connection connection = DriverManager.getConnection(jdbcUrl, username, password);
+
+            // Create a statement to execute the query
+            Statement statement = connection.createStatement();
+
+            // Execute the query and get the result set
+            ResultSet resultSet = statement.executeQuery(query);
+
+            // Create a new Excel workbook
+            Workbook workbook = new XSSFWorkbook();
+            Sheet sheet = workbook.createSheet("Data");
+
+            // Create a header row
+            Row headerRow = sheet.createRow(0);
+            ResultSetMetaData metaData = resultSet.getMetaData();
+            int columnCount = metaData.getColumnCount();
+            for (int i = 1; i <= columnCount; i++) {
+                String columnName = metaData.getColumnName(i);
+                Cell cell = headerRow.createCell(i - 1);
+                cell.setCellValue(columnName);
+            }
+
+            // Populate the data rows
+            int rowNumber = 1;
+            while (resultSet.next()) {
+                Row dataRow = sheet.createRow(rowNumber);
+                for (int i = 1; i <= columnCount; i++) {
+                    Object value = resultSet.getObject(i);
+                    Cell cell = dataRow.createCell(i - 1);
+                    if (value != null) {
+                        cell.setCellValue(value.toString());
+                    }
+                }
+                rowNumber++;
+            }
+
+            // Save the workbook to a file
+            FileOutputStream fileOut = new FileOutputStream("data.xlsx");
+            workbook.write(fileOut);
+            fileOut.close();
+
+            // Close resources
+            resultSet.close();
+            statement.close();
+            connection.close();
+
+            System.out.println("Data saved to Excel successfully.");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
+
